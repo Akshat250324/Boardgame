@@ -51,12 +51,12 @@ stage('SonarQube Analysis') {
                 $SCANNER_HOME/bin/sonar-scanner \
                 -Dsonar.projectName=BoardGame \
                 -Dsonar.projectKey=BoardGame \
-                -Dsonar.java.binaries=target/classes
+                -Dsonar.java.binaries=target/classes \
+                -Dsonar.exclusions=trivy-*.html
             '''
         }
     }
 }
-
 stage('Quality Gate') {
     steps {
         timeout(time: 5, unit: 'MINUTES') {
