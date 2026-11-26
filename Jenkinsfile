@@ -66,7 +66,7 @@ stage('Quality Gate') {
         stage('Build & Tag Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
                         sh "docker build -t akshatk1234/boardshack:latest ."
                     }
                 }
