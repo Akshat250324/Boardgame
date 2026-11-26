@@ -94,6 +94,15 @@ stage('Quality Gate') {
         '''
     }
 }
+        stage('Push Docker Image') {
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
+                sh "docker push akshatk1234/boardshack:latest"
+            }
+        }
+    }
+}
 
         stage('Deploy to Kubernetes') {
             steps {
