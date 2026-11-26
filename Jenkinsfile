@@ -36,27 +36,26 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo 'Hello World'
-
-                sh '''
-                    $SCANNER_HOME/bin/sonar-scanner \
-                    -Dsonar.projectName=BoardGame \
-                    -Dsonar.projectKey=BoardGame \
-                    -Dsonar.java.binaries=.
-                '''
-            }
+stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQube') {
+            sh '''
+                $SCANNER_HOME/bin/sonar-scanner \
+                -Dsonar.projectName=BoardGame \
+                -Dsonar.projectKey=BoardGame \
+                -Dsonar.java.binaries=target/classes
+            '''
         }
+    }
+}
 
-        stage('Quality Gate') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
-                }
-            }
+stage('Quality Gate') {
+    steps {
+        timeout(time: 5, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
         }
-
+    }
+}
         stage('Build') {
             steps {
                 sh "mvn package"
