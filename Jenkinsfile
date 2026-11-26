@@ -30,11 +30,19 @@ pipeline {
             }
         }
 
-        stage('File System Scan') {
-            steps {
-                sh "trivy fs --format table -o trivy-fs-report.html ."
-            }
-        }
+       stage('File System Scan') {
+    steps {
+        sh '''
+            export TMPDIR=/var/lib/jenkins/tmp
+            export TRIVY_CACHE_DIR=/var/lib/jenkins/.cache/trivy
+
+            trivy fs \
+                --format table \
+                -o trivy-fs-report.html \
+                .
+        '''
+    }
+}
 
 stage('SonarQube Analysis') {
     steps {
@@ -73,21 +81,19 @@ stage('Quality Gate') {
             }
         }
 
-        stage('Docker Image Scan') {
-            steps {
-                sh "trivy image --format table -o trivy-image-report.html akshatk1234/boardshack:latest"
-            }
-        }
+       stage('Docker Image Scan') {
+    steps {
+        sh '''
+            export TMPDIR=/var/lib/jenkins/tmp
+            export TRIVY_CACHE_DIR=/var/lib/jenkins/.cache/trivy
 
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                        sh "docker push akshatk1234/boardshack:latest"
-                    }
-                }
-            }
-        }
+            trivy image \
+                --format table \
+                -o trivy-image-report.html \
+                akshatk1234/boardshack:latest
+        '''
+    }
+}
 
         stage('Deploy to Kubernetes') {
             steps {
