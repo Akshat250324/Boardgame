@@ -104,39 +104,57 @@ stage('Quality Gate') {
     }
 }
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                withKubeConfig(
-                    caCertificate: '',
-                    clusterName: 'kubernetes',
-                    contextName: '',
-                    credentialsId: 'k8-cred',
-                    namespace: 'webapps',
-                    restrictKubeConfigAccess: false,
-                    serverUrl: 'https://172.31.35.92:6443'
-                ) {
-                    sh "kubectl apply -f deployment-service.yaml"
-                }
-            }
-        }
+        
+stage('Deploy to Kubernetes') {
+    steps {
+        withCredentials([
+            string(credentialsId: 'aws-access-key-id',
+                   variable: 'AWS_ACCESS_KEY_ID'),
+            string(credentialsId: 'aws-secret-access-key',
+                   variable: 'AWS_SECRET_ACCESS_KEY')
+        ]) {
+            sh '''
+                export AWS_DEFAULT_REGION=ap-south-1
 
-        stage('Verify the deployment') {
-            steps {
-                withKubeConfig(
-                    caCertificate: '',
-                    clusterName: 'kubernetes',
-                    contextName: '',
-                    credentialsId: 'k8-cred',
-                    namespace: 'webapps',
-                    restrictKubeConfigAccess: false,
-                    serverUrl: 'https://172.31.35.92:6443'
-                ) {
-                    sh "kubectl get pods -n webapps"
-                    sh "kubectl get svc -n webapps"
-                }
-            }
+                aws eks update-kubeconfig \
+                  --region ap-south-1 \
+                  --name boardgame-eks
+
+                kubectl create namespace webapps \
+                  --dry-run=client -o yaml | kubectl apply -f -
+
+                kubectl apply -f deployment-service.yaml \
+                  -n webapps
+            '''
         }
     }
+}
+
+
+        
+stage('Verify the deployment') {
+    steps {
+        withCredentials([
+            string(credentialsId: 'aws-access-key-id',
+                   variable: 'AWS_ACCESS_KEY_ID'),
+            string(credentialsId: 'aws-secret-access-key',
+                   variable: 'AWS_SECRET_ACCESS_KEY')
+        ]) {
+            sh '''
+                export AWS_DEFAULT_REGION=ap-south-1
+
+                aws eks update-kubeconfig \
+                  --region ap-south-1 \
+                  --name boardgame-eks
+
+                kubectl get nodes
+                kubectl get pods -n webapps
+                kubectl get svc -n webapps
+            '''
+        }
+    }
+}
+
 
     post {
         always {
