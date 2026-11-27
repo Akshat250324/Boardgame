@@ -153,7 +153,7 @@ stage('Verify the deployment') {
             '''
         }
     }
-}
+    }
 
 
     post {
